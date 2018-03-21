@@ -37,6 +37,12 @@ class PhpMetaGenerator
         'decoder',
         'variant',
         'simple',
+        'basket',
+        'item',
+        'category',
+        'discount',
+        'news',
+        'vendor',
     ];
 
     /**
@@ -96,7 +102,7 @@ class PhpMetaGenerator
             }
 
             foreach ($this->moduleCases($key) as $moduleName) {
-                fwrite($file, "        '{$moduleName}' => {$lastModule}::class,\n");
+                fwrite($file, "        '{$moduleName}' => \{$lastModule}::class,\n");
             }
         }
 
