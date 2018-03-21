@@ -1,8 +1,8 @@
 <?php
 
-$env = isset($argv[1]) ? $argv[1] : 'vagrant';
-$useShopId = isset($argv[2]) ? $argv[2] : 1;
-$shopId = isset($argv[3]) ? $argv[3] : 1;
+$env = $argv[1] ?? 'vagrant';
+$useShopId = $argv[2] ?? 0;
+$shopId = $argv[3] ?? 1;
 
 define('CUSTOM_CONFIG_PATH', __DIR__ . '/dev/config/');
 define('SHOP_ENV_LOCAL', 'local');
@@ -11,9 +11,10 @@ define('SHOP_ENV_LOCAL', 'local');
 class PhpMetaGenerator
 {
     const MAP_TO = [
-        '\oxNew',
-        '\twtNew',
-        '\oxRegistry::get',
+        '\oxNew(0)',
+        '\twtNew(0)',
+        '\oxRegistry::get(0)',
+        '\oxUtilsObject::oxNew(0)',
     ];
 
     /**
@@ -62,7 +63,7 @@ class PhpMetaGenerator
         $source = $this->useShopId ? $this->aModules[$this->shopId] : $this->aModules;
         $file = fopen($outputFile, 'wb');
         fwrite($file, "<?php\n\nnamespace PHPSTORM_META {\n");
-        fwrite($file, "\t\$map = [\n\t\t'' => '@',\n");
+        fwrite($file, "    \$map = [\n        '' => '@',\n");
 
         foreach ($source as $key => $rawValue) {
             $parts = explode('&', $rawValue);
@@ -72,13 +73,13 @@ class PhpMetaGenerator
                 $lastModule = basename($lastModule);
             }
 
-            fwrite($file, "\t\t'{$key}' => $lastModule::class,\n");
+            fwrite($file, "        '{$key}' => $lastModule::class,\n");
         }
 
-        fwrite($file, "\t];\n\n");
+        fwrite($file, "    ];\n\n");
 
         foreach (self::MAP_TO as $map) {
-            fwrite($file, "\toverride({$map}, map(\$map));\n");
+            fwrite($file, "    override({$map}, map(\$map));\n");
         }
 
         fwrite($file, "}\n");
