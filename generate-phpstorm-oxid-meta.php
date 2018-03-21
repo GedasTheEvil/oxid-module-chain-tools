@@ -7,7 +7,6 @@ $shopId = $argv[3] ?? 1;
 define('CUSTOM_CONFIG_PATH', __DIR__ . '/dev/config/');
 define('SHOP_ENV_LOCAL', 'local');
 
-
 class PhpMetaGenerator
 {
     const MAP_TO = [
@@ -15,6 +14,27 @@ class PhpMetaGenerator
         '\twtNew(0)',
         '\oxRegistry::get(0)',
         '\oxUtilsObject::oxNew(0)',
+    ];
+
+    const KNOWN_WORDS = [
+        'ox',
+        'list',
+        'payment',
+        'article',
+        'order',
+        'input',
+        'validator',
+        'picture',
+        'search',
+        'utils',
+        'view',
+        'view',
+        'voucher',
+        'service',
+        'file',
+        'config',
+        'encoder',
+        'decoder',
     ];
 
     /**
@@ -37,7 +57,7 @@ class PhpMetaGenerator
      */
     private $shopId;
 
-    public function __construct($env, $useShopId = 1, $shopId = 1)
+    public function __construct(string $env, int $useShopId = 1, int $shopId = 1)
     {
         $this->env = $env;
         $this->useShopId = $useShopId;
@@ -58,7 +78,7 @@ class PhpMetaGenerator
         $this->dump($outputFile);
     }
 
-    private function dump($outputFile)
+    private function dump(string $outputFile)
     {
         $source = $this->useShopId ? $this->aModules[$this->shopId] : $this->aModules;
         $file = fopen($outputFile, 'wb');
@@ -73,7 +93,9 @@ class PhpMetaGenerator
                 $lastModule = basename($lastModule);
             }
 
-            fwrite($file, "        '{$key}' => $lastModule::class,\n");
+            foreach ($this->moduleCases($key) as $moduleName) {
+                fwrite($file, "        '{$moduleName}' => {$lastModule}::class,\n");
+            }
         }
 
         fwrite($file, "    ];\n\n");
@@ -86,8 +108,33 @@ class PhpMetaGenerator
         fclose($file);
     }
 
+    private function moduleCases(string $moduleName): array
+    {
+        $nameLength = strlen($moduleName);
+        $cases = [$moduleName];
+
+        foreach (self::KNOWN_WORDS as $word) {
+            $pos = stripos($moduleName, $word);
+            $length = strlen($word);
+            $index1 = $pos + $length;
+
+            if ($pos !== false) {
+                if ($word !== 'ox') {
+                    $moduleName[$pos] = strtoupper($moduleName[$pos]);
+                    $cases[] = $moduleName;
+                }
+
+                if ($index1 < $nameLength) {
+                    $moduleName[$index1] = strtoupper($moduleName[$index1]);
+                    $cases[] = $moduleName;
+                }
+            }
+        }
+
+        return array_unique($cases);
+    }
 }
 
-(new PhpMetaGenerator($env, $useShopId, $shopId))->generate();
+(new PhpMetaGenerator($env, (int)$useShopId, (int)$shopId))->generate();
 
 echo "\nDone.\n";
