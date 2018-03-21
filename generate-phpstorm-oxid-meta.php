@@ -35,6 +35,8 @@ class PhpMetaGenerator
         'config',
         'encoder',
         'decoder',
+        'variant',
+        'simple',
     ];
 
     /**
